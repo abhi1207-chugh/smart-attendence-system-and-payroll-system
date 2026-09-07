@@ -2,13 +2,16 @@
 
 PostgreSQL is the **authoritative source of truth** for workforce, attendance, leave, overtime, payroll, and audit data for the Smart Workforce Attendance & Payroll Management System.
 
-**Phase:** 2.2 — PostgreSQL infrastructure and application schema.
+**Phase:** 2.2 — PostgreSQL infrastructure, schema, and advanced DBMS features.
 
 | Step | Status | Migration |
 |------|--------|-----------|
 | Step 1 — Foundation (UUID extension, schema comment) | Applied | `20240903000000_foundation.sql` |
 | Step 2 — Application tables (20 entities) | Applied | `20240903100000_application_schema.sql` |
-| Step 3+ — Functions, triggers, views, seeds | Not started | — |
+| Step 3 — Functions, triggers, views, indexes | Applied | `20240903110000_advanced_dbms_features.sql` |
+| Step 4+ — Seeds, further backend APIs | Not started | — |
+
+**Backend integration (Phase 2.3):** The Node.js backend in `backend/` connects via `DATABASE_URL`. See [backend README](../backend/README.md) and [backend architecture](../docs/integration/backend-architecture.md).
 
 Design documents: [`docs/database/`](../docs/database/)
 
@@ -122,7 +125,7 @@ Check status:
 
 This creates a timestamped file in `database/migrations/`. Edit it with `-- migrate:up` and `-- migrate:down` sections.
 
-**Current application schema migration:** `20240903100000_application_schema.sql`
+**Current migrations:** `20240903000000_foundation.sql`, `20240903100000_application_schema.sql`, `20240903110000_advanced_dbms_features.sql`
 
 ### Verify Step 2 constraints (optional)
 
@@ -130,7 +133,16 @@ Runs tests A–H in a rolled-back transaction:
 
 ```bash
 docker compose exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
-  -f database/scripts/verify_step2_constraints.sql
+  -f - < database/scripts/verify_step2_constraints.sql
+```
+
+### Verify Step 3 DBMS features (optional)
+
+Runs tests S3-01 through S3-20 in a rolled-back transaction:
+
+```bash
+docker compose exec -T postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+  -f - < database/scripts/verify_step3_dbms.sql
 ```
 
 ### Alternative: run dbmate directly
@@ -217,11 +229,13 @@ The authentication table is named `"user"` (quoted) because `user` is a reserved
 database/
 ├── migrations/          # Versioned SQL migrations (dbmate)
 │   ├── 20240903000000_foundation.sql
-│   └── 20240903100000_application_schema.sql
+│   ├── 20240903100000_application_schema.sql
+│   └── 20240903110000_advanced_dbms_features.sql
 ├── seeds/               # Reference/seed data (post-schema)
 ├── scripts/
 │   ├── migrate.sh       # Run dbmate via Docker
-│   └── verify_step2_constraints.sql  # Constraint tests A–H (rolled back)
+│   ├── verify_step2_constraints.sql  # Constraint tests A–H (rolled back)
+│   └── verify_step3_dbms.sql         # DBMS feature tests S3-01..S3-20 (rolled back)
 └── README.md            # This file
 ```
 
@@ -256,5 +270,10 @@ docker compose exec postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELE
 - [ER diagram](../docs/database/er-diagram.md)
 - [Relational schema](../docs/database/relational-schema.md)
 - [Constraints](../docs/database/database-constraints.md)
+- [Functions](../docs/database/functions.md)
+- [Triggers](../docs/database/triggers.md)
+- [Views](../docs/database/views.md)
+- [Transactions](../docs/database/transactions.md)
+- [Indexes](../docs/database/indexes.md)
 - [Phase 2 decisions](../docs/phase2/decisions.md)
 - [System architecture](../docs/requirements/system-architecture.md)
