@@ -113,13 +113,15 @@ This document describes the **logical architecture** for the Smart Workforce Att
 **Why it exists:** Optimized for high-dimensional similarity search over face embeddings — a workload ill-suited to traditional relational indexes alone.
 
 **Responsibilities:**
-- Store face embedding vectors keyed by employee ID
+- Store face embedding vectors keyed by employee reference ID
+- Store embedding/model metadata and relevant vector-search metadata
 - Support nearest-neighbor / similarity search
-- Return candidate employee ID(s) and similarity scores
+- Return candidate employee ID(s) and confidence/similarity scores
 
 **Does NOT:**
 - Store payroll, attendance, or leave records
-- Decide attendance outcomes
+- Store salary, employee name, department, or other business data duplicated from PostgreSQL
+- Decide attendance outcomes, classification, or payroll amounts
 
 **Product choice:** **OPEN** (e.g., dedicated vector DB vs. PostgreSQL extension — decision required)
 
@@ -160,14 +162,17 @@ Admin UI → Backend: confirm registration status (PostgreSQL metadata flag — 
 ### 4.2 Employee: Check-In via Face
 
 ```
-Camera → Face pipeline → Vector DB: similarity search → employee_id
-Frontend → Backend: POST attendance check-in { employee_id, timestamp, ... }
-Backend: validate employee active, face registered, no open session
+Camera → Face Detection → Face Embedding → Vector DB: similarity search
+       → candidate employee_id + confidence score
+Frontend/Service → Backend: POST attendance check-in { employee_id, recognition metadata, ... }
+Backend: validate employee exists, employee active, trusted recognition source,
+         confidence meets threshold, no duplicate open session
+Backend: record check-in using server timestamp as authoritative time
 Backend → PostgreSQL: insert attendance record (transaction)
 Backend → Audit log (if applicable)
 ```
 
-**Critical:** Attendance is written only after backend validation — not at recognition time.
+**Critical:** Attendance is written only after backend validation — not at recognition time. The frontend must not be trusted for employee identity, confidence validity, attendance classification, or payroll outcomes.
 
 ### 4.3 Payroll Run
 
@@ -209,12 +214,16 @@ Backend → PostgreSQL: query via view or filtered query
                                                   │
                      Role check (ADMIN/EMPLOYEE)  │
                      Resource scope check         │
+                     Business rule enforcement     │
+                     Trusted recognition validation│
                                                   ▼
                                            PostgreSQL / Vector DB
 ```
 
 - All sensitive operations require authenticated requests.
 - Biometric flow may operate on a kiosk; backend still validates employee eligibility.
+- The client must **not** be trusted to decide: employee identity, attendance validity, payroll amount, attendance classification, or confidence validity.
+- The face recognition service produces confidence/similarity scores; the backend validates them from a trusted source before accepting attendance.
 
 ---
 
@@ -249,14 +258,24 @@ Backend → PostgreSQL: query via view or filtered query
 
 ## 9. Open Architectural Decisions
 
-See summary at project level. Key items:
+Detailed **DECIDED** vs **TBD** tracking lives in [phase2/decisions.md](../phase2/decisions.md).
+
+Phase 2.1 database and face data design documents:
+
+| Area | Documents |
+|------|-----------|
+| PostgreSQL schema | [database/relational-schema.md](../database/relational-schema.md), [database/er-diagram.md](../database/er-diagram.md) |
+| Constraints & 3NF | [database/database-constraints.md](../database/database-constraints.md), [database/normalization.md](../database/normalization.md) |
+| Face & vector store | [face/face-data-architecture.md](../face/face-data-architecture.md), [face/vector-db-design.md](../face/vector-db-design.md) |
+
+Remaining open items (summary):
 
 1. **Vector database product** — standalone vs. PostgreSQL extension
 2. **Backend language/framework**
 3. **Face model and embedding dimensions**
 4. **Where face pipeline executes** — browser, backend service, or hybrid
 5. **Authentication mechanism** — JWT vs. session cookies
-6. **API style details** — error format, pagination, versioning
+6. **Recognition threshold and similarity metric** — after model evaluation
 7. **Deployment topology** — single VM vs. containerized services (academic demo)
 
-These must be resolved in a future architecture decision record before implementation begins.
+These must be resolved in implementation phases before production deployment.

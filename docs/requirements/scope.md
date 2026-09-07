@@ -26,7 +26,7 @@
 | Overtime | Record and approve overtime hours linked to attendance periods |
 | Bonus | Apply one-off or periodic bonuses to payroll |
 | Deductions | Apply statutory or organizational deductions |
-| Payroll | Calculate pay for a period from attendance, leave, overtime, bonuses, deductions |
+| Payroll | Calculate monthly pay for a period from attendance classification, leave, overtime, bonuses, deductions |
 | Payments | Record payment status against payroll outputs |
 
 ### Governance & Reporting
@@ -114,7 +114,7 @@ returns employee ID only. Backend decides attendance action.
 
 1. Single organization; all employees belong to one logical tenant.
 2. One primary camera source per check-in station (browser-based webcam acceptable for MVP).
-3. Pay periods and shift definitions are configured by admin before payroll runs.
+3. Pay periods are **monthly** for MVP; shift definitions (including weekly-off days) are configured by admin before payroll runs.
 4. Face recognition returns a candidate employee ID; backend validates eligibility (active employee, registered face, etc.) before recording attendance.
 5. PostgreSQL remains authoritative for any data that affects payroll amounts.
 

@@ -29,6 +29,8 @@ Non-functional requirements define **how** the system should behave. Items marke
 | NFR-SEC-05 | Raw camera frames should not be persistently stored by default (**storage policy: OPEN**). |
 | NFR-SEC-06 | API communication should use HTTPS in non-local deployments. |
 | NFR-SEC-07 | Audit logs must not be modifiable or deletable via standard application APIs. |
+| NFR-SEC-08 | The client/frontend must not be trusted to assert employee identity, attendance validity, payroll amounts, attendance classification, or passing confidence scores. |
+| NFR-SEC-09 | Confidence/similarity scores must originate from the trusted recognition service; backend validates threshold before accepting attendance. |
 
 **Why:** The system handles payroll (financial) and biometric data — both require strong access control.
 

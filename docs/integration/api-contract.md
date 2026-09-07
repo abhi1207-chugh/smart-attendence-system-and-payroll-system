@@ -2,8 +2,8 @@
 
 This document defines the **integration contract** between the Next.js frontend, backend/API, and consumers of recognition results. It is a Phase 1 specification — not implementation code.
 
-**Status:** Draft  
-**Version:** 0.1.0  
+**Status:** Phase 1 Final  
+**Version:** 0.2.0  
 **Base URL:** `{API_BASE_URL}/api/v1` (**deployment value TBD**)
 
 ---
@@ -186,9 +186,12 @@ Invalidate session (**behavior: OPEN** if stateless JWT).
   "id": "uuid",
   "name": "string",
   "start_time": "09:00",
-  "end_time": "18:00"
+  "end_time": "18:00",
+  "weekly_off_days": ["SUNDAY"]
 }
 ```
+
+`weekly_off_days` is configurable per shift — not hardcoded to Sunday at the system level.
 
 ---
 
@@ -295,7 +298,7 @@ Recognition may be implemented as a direct vector DB query from a service layer 
 }
 ```
 
-**Note:** This endpoint identifies only. It does **not** record attendance.
+**Note:** This endpoint identifies only. It does **not** record attendance. The confidence score is produced by the trusted recognition service — clients must not fabricate passing scores.
 
 ---
 
@@ -314,9 +317,15 @@ Record check-in after successful recognition and backend validation.
   "employee_id": "uuid",
   "timestamp": "ISO8601",
   "source": "FACE_RECOGNITION",
-  "recognition_confidence": 0.92
+  "recognition_confidence": 0.92,
+  "recognition_token": "string"
 }
 ```
+
+**Server behavior:**
+- `timestamp` in the request is optional/informational; the **server timestamp** is authoritative for the recorded check-in time.
+- `recognition_confidence` must be validated against a trusted recognition source — the client cannot arbitrarily assert a passing score.
+- Backend validates employee exists, is active, recognition threshold met, and no duplicate open session.
 
 **Response (201):**
 
@@ -332,7 +341,7 @@ Record check-in after successful recognition and backend validation.
 }
 ```
 
-**Error (409):** Employee already has open session.
+**Error (409):** Employee already has open session or duplicate check-in for working period.
 
 ### POST /attendance/check-out
 
@@ -346,6 +355,12 @@ Record check-in after successful recognition and backend validation.
 }
 ```
 
+**Server behavior:**
+- `timestamp` in the request is optional/informational; the **server timestamp** is authoritative for the recorded check-out time.
+- Backend rejects check-out without a valid open check-in on the same session.
+- Backend prevents multiple checkout records for the same attendance session.
+- On completion, working duration is calculated and attendance classification (HALF-DAY / FULL-DAY) is derived per business rules.
+
 **Response (200):**
 
 ```json
@@ -356,6 +371,8 @@ Record check-in after successful recognition and backend validation.
     "employee_id": "uuid",
     "check_in": "ISO8601",
     "check_out": "ISO8601",
+    "working_duration_minutes": 480,
+    "classification": "FULL-DAY | HALF-DAY",
     "status": "COMPLETED"
   }
 }
@@ -441,6 +458,8 @@ Creates audit log entry.
   "period_end": "2026-08-31"
 }
 ```
+
+MVP payroll frequency is **MONTHLY**. Payroll incorporates attendance classification, approved leave, approved overtime, bonuses, and deductions. Net pay = base pay after attendance adjustment + approved overtime + bonus − deductions.
 
 **Payroll record statuses:** `DRAFT` | `FINALIZED` | `PAID` (**exact enum: TBD**)
 
@@ -552,7 +571,23 @@ Creates audit log entry.
 
 ---
 
-## 21. Open Contract Decisions
+## 21. Security and Trust Boundaries
+
+The frontend must **not** be trusted to decide:
+
+| Decision | Trusted owner |
+|----------|---------------|
+| Employee identity | Trusted recognition pipeline + backend validation |
+| Attendance validity | Backend business rules |
+| Attendance classification | Backend (HALF-DAY / FULL-DAY / ABSENT) |
+| Payroll amount | Backend + PostgreSQL |
+| Confidence/similarity validity | Trusted recognition service + backend threshold check |
+
+PostgreSQL is the source of truth for employees, departments, shifts, attendance, leaves, overtime, payroll, and audit data. The vector database is used for identity matching only (embeddings, employee reference ID, model metadata).
+
+---
+
+## 22. Open Contract Decisions
 
 1. JWT vs. session-based auth
 2. Whether `/face/recognize` is public on kiosk
