@@ -2,12 +2,24 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import request from "supertest";
 import { createApp } from "../src/app.js";
 import { initDatabase, getDatabase } from "../src/database/client.js";
+import { signToken } from "../src/auth/token.js";
 
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
   throw new Error("DATABASE_URL is required for backend tests");
 }
+
+const adminAuth = `Bearer ${signToken(
+  {
+    id: "00000000-0000-0000-0000-000000000001",
+    email: "test-admin@example.local",
+    role: "ADMIN",
+    employee_id: null,
+  },
+  process.env.JWT_SECRET ?? "",
+  "1h"
+)}`;
 
 describe("Backend foundation", () => {
   const app = createApp();
@@ -110,7 +122,7 @@ describe("GET /api/v1/employees", () => {
   });
 
   it("queries PostgreSQL and returns structured employee JSON", async () => {
-    const response = await request(app).get("/api/v1/employees");
+    const response = await request(app).get("/api/v1/employees").set("Authorization", adminAuth);
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
@@ -135,10 +147,10 @@ describe("GET /api/v1/employees", () => {
   });
 
   it("validates optional status query parameter", async () => {
-    const valid = await request(app).get("/api/v1/employees?status=ACTIVE");
+    const valid = await request(app).get("/api/v1/employees?status=ACTIVE").set("Authorization", adminAuth);
     expect(valid.status).toBe(200);
 
-    const invalid = await request(app).get("/api/v1/employees?status=INVALID");
+    const invalid = await request(app).get("/api/v1/employees?status=INVALID").set("Authorization", adminAuth);
     expect(invalid.status).toBe(400);
     expect(invalid.body.success).toBe(false);
     expect(invalid.body.error.code).toBe("VALIDATION_ERROR");
@@ -170,7 +182,7 @@ describe("Database configuration and error handling", () => {
       "postgres://invalid_user:invalid_pass@localhost:5432/nonexistent_db?sslmode=disable"
     );
 
-    const response = await request(app).get("/api/v1/employees");
+    const response = await request(app).get("/api/v1/employees").set("Authorization", adminAuth);
 
     expect(response.status).toBe(500);
     expect(response.body.success).toBe(false);

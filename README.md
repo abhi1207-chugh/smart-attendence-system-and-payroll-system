@@ -8,7 +8,7 @@ A college DBMS-focused workforce management system that combines **PostgreSQL** 
 
 This system helps organizations record attendance, manage leave and overtime, and run payroll using business rules enforced in both the **backend** and **PostgreSQL**. Face recognition identifies an employee; the **backend** decides whether an attendance operation is allowed and writes authoritative records to PostgreSQL.
 
-**Current status:** Requirements, database design, PostgreSQL implementation, and backend foundation are complete. Authentication, face pipeline, Vector DB, domain APIs, and frontend are planned next.
+**Current status:** Requirements, database design, PostgreSQL implementation, and backend foundation are complete. Authentication and authorization are complete. Face pipeline, Vector DB, domain APIs, and frontend are planned next.
 
 ---
 
@@ -44,7 +44,7 @@ See [`docs/requirements/objectives.md`](docs/requirements/objectives.md).
 | Requirements & architecture documentation | **Complete** |
 | PostgreSQL schema (20 tables) + advanced DBMS layer | **Complete** |
 | Backend health + employee list API | **Complete** |
-| Authentication & authorization | **Next** |
+| Authentication & authorization (JWT, roles, seed data) | **Complete** |
 | Face registration & recognition | **Planned** |
 | Vector DB integration | **Planned** |
 | Attendance check-in/out APIs | **Planned** |
@@ -123,7 +123,7 @@ See [`docs/face/`](docs/face/).
 - Parameterized queries, connection pooling, structured errors, Zod validation
 - Vitest + Supertest integration tests
 
-**Deferred:** `GET /employees` is not yet protected by ADMIN authentication (intentionally deferred to Phase 2.3 Step 2).
+**Auth (Phase 2.3 Step 2):** `POST /auth/login` issues a JWT; `GET /employees` requires an ADMIN token.
 
 See [`docs/integration/backend-architecture.md`](docs/integration/backend-architecture.md) and [`docs/integration/api-contract.md`](docs/integration/api-contract.md).
 
@@ -152,12 +152,13 @@ See [`docs/requirements/user-roles.md`](docs/requirements/user-roles.md).
 | **Phase 2.2 Step 2** | 20-table schema, enums, constraints, Step 2 verification tests |
 | **Phase 2.2 Step 3** | Functions, triggers, views, indexes, transaction helpers, Step 3 tests |
 | **Phase 2.3 Step 1** | Backend foundation, PostgreSQL integration, health + employees APIs, tests |
+| **Phase 2.3 Step 2** | JWT login, role-based route protection, dev seed data, auth tests |
 
 ### IN PROGRESS / NEXT
 
 | Item | Notes |
 |------|-------|
-| **Phase 2.3 Step 2** | Authentication + authorization |
+| **Phase 2.3 Step 3** | Employee management API |
 
 ### PLANNED
 

@@ -99,13 +99,17 @@ Next.js Frontend  →  HTTPS/JSON REST  →  Backend API  →  PostgreSQL
 | Endpoint | Contract section | Notes |
 |----------|------------------|-------|
 | `GET /health` | §17 | Returns `postgres` and `vector_db` status |
-| `GET /employees` | §4 | Lists employees; `face_registered` derived from PostgreSQL metadata |
+| `GET /employees` | §4 | Lists employees; `face_registered` derived from PostgreSQL metadata. **ADMIN only** (Step 2) |
+| `POST /auth/login` | §3 | Email + password → `{ token, user }` (Step 2) |
+| `GET /auth/me` | — | Returns the authenticated user from the bearer token (Step 2) |
 
 ### Contract Gaps (Step 1)
 
 | Item | Status |
 |------|--------|
-| `GET /employees` ADMIN auth | Auth not implemented; `authPlaceholder` middleware reserved |
+| `GET /employees` ADMIN auth | Resolved in Step 2 (JWT + `requireRole("ADMIN")`) |
+| `POST /auth/logout` | Not implemented — JWT is stateless; the client discards the token |
+| Token revocation | Tokens stay valid until expiry (`JWT_EXPIRES_IN`, default 8h), even if the user is deactivated afterwards |
 | Pagination for list endpoints | OPEN in contract — not implemented |
 | `vector_db: ok` on health | Returns `degraded` until Vector DB is integrated |
 
@@ -138,6 +142,8 @@ Standard envelope (api-contract §2.4):
 | HTTP | Code | Usage |
 |------|------|-------|
 | 400 | `VALIDATION_ERROR` | Invalid query/body |
+| 401 | `UNAUTHORIZED` | Missing, invalid or expired token; bad login credentials |
+| 403 | `FORBIDDEN` | Authenticated but wrong role |
 | 404 | `NOT_FOUND` | Missing route/resource |
 | 409 | `CONFLICT` | Reserved for future use |
 | 500 | `INTERNAL_ERROR` | Server/database errors |
@@ -146,13 +152,16 @@ Raw PostgreSQL errors are logged server-side only; clients receive generic messa
 
 ---
 
-## 8. Authentication Boundary (Future)
+## 8. Authentication and Authorization (Implemented — Phase 2.3 Step 2)
 
-Step 1 includes `authPlaceholder` middleware on protected routes. Future steps will:
+- **Mechanism:** Bearer JWT (HS256). `POST /auth/login` returns `{ token, user }`; clients send `Authorization: Bearer <token>`.
+- **Passwords:** bcrypt (cost 10) in `"user".password_hash`. Unknown email and wrong password return the same 401 message; inactive users (and `EMPLOYEE` users with an inactive employee record) cannot log in.
+- **Middleware:** `createAuthenticate(secret)` verifies the token and sets `req.user`; `requireRole(...roles)` returns 403 for other roles (`src/middleware/auth.ts`).
+- **Public routes:** `/health`, `/auth/login`. Everything else requires a token.
+- **Config:** `JWT_SECRET` (min 32 chars) and `JWT_EXPIRES_IN` in the root `.env`.
+- **Seed data:** `npm run seed` creates a dev admin and sample employees (`src/scripts/seed.ts`).
 
-1. Verify JWT or session from `POST /auth/login`
-2. Enforce `ADMIN` / `EMPLOYEE` roles per endpoint
-3. Scope employee self-service to own `employee_id`
+Still to do in later steps: scope `EMPLOYEE` self-service endpoints to their own `employee_id`.
 
 Face recognition is **not** application authentication for the employee portal.
 

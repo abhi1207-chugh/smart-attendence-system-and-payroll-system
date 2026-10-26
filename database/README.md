@@ -9,7 +9,8 @@ PostgreSQL is the **authoritative source of truth** for workforce, attendance, l
 | Step 1 — Foundation (UUID extension, schema comment) | Applied | `20240903000000_foundation.sql` |
 | Step 2 — Application tables (20 entities) | Applied | `20240903100000_application_schema.sql` |
 | Step 3 — Functions, triggers, views, indexes | Applied | `20240903110000_advanced_dbms_features.sql` |
-| Step 4+ — Seeds, further backend APIs | Not started | — |
+| Dev seed data | `cd backend && npm run seed` (idempotent; refuses production) | `backend/src/scripts/seed.ts` |
+| Further backend APIs | Not started | — |
 
 **Backend integration (Phase 2.3):** The Node.js backend in `backend/` connects via `DATABASE_URL`. See [backend README](../backend/README.md) and [backend architecture](../docs/integration/backend-architecture.md).
 

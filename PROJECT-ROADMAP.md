@@ -90,19 +90,21 @@ This roadmap reflects the **actual** project status. Items marked **COMPLETE** h
 - Validation (Zod), structured error handling, Vitest + Supertest tests
 - `docs/integration/backend-architecture.md`
 
-**Known deferred item:** `GET /employees` ADMIN authentication — placeholder middleware only; real auth is Step 2.
+**Resolved in Step 2:** `GET /employees` now requires an ADMIN token.
 
 ### Step 2 — Authentication + Authorization
 
-**STATUS: NEXT**
+**STATUS: COMPLETE**
 
-- `POST /auth/login`, JWT or session (per contract)
-- Protect routes by role (`ADMIN`, `EMPLOYEE`)
-- Enforce `GET /employees` ADMIN requirement
+- `POST /auth/login` (bcrypt + Bearer JWT), `GET /auth/me`
+- `authenticate` + `requireRole` middleware; `GET /employees` is ADMIN-only
+- Dev seed data: `cd backend && npm run seed`
+- Tests: `backend/tests/auth-utils.test.ts`, `auth-login.test.ts`, `auth-guard.test.ts`
+- Known limitation: stateless JWT — no logout/revocation until token expiry
 
 ### Step 3 — Employee Management API
 
-**STATUS: PLANNED**
+**STATUS: NEXT**
 
 - Create, read, update, deactivate employees
 - Department and shift assignment
@@ -234,8 +236,9 @@ Camera
 | Phase 2.2 Step 2 — Schema + Constraints | **COMPLETE** |
 | Phase 2.2 Step 3 — Advanced DBMS | **COMPLETE** |
 | Phase 2.3 Step 1 — Backend Foundation | **COMPLETE** |
-| Phase 2.3 Step 2 — Auth | **NEXT** |
-| Phase 2.3 Steps 3–9 | **PLANNED** |
+| Phase 2.3 Step 2 — Auth | **COMPLETE** |
+| Phase 2.3 Step 3 — Employee API | **NEXT** |
+| Phase 2.3 Steps 4–9 | **PLANNED** |
 | Phase 3 — Frontend | **PLANNED** |
 | Phase 4 — Full Integration | **PLANNED** |
 | Phase 5 — Testing & Security | **PLANNED** |

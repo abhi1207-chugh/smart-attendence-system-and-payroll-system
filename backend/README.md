@@ -23,12 +23,22 @@ npm run dev
 
 Server listens on `http://localhost:3001` by default (`BACKEND_PORT`).
 
-## API Endpoints (Phase 2.3 Step 1)
+## API Endpoints (Phase 2.3 Steps 1–2)
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | GET | `/api/v1/health` | No | Backend and PostgreSQL health |
-| GET | `/api/v1/employees` | Placeholder | List employees from PostgreSQL |
+| POST | `/api/v1/auth/login` | No | Email + password → `{ token, user }` |
+| GET | `/api/v1/auth/me` | Bearer | Current user from token |
+| GET | `/api/v1/employees` | Bearer, ADMIN | List employees from PostgreSQL |
+
+## Seed data (development)
+
+```bash
+npm run seed
+```
+
+Idempotent. Creates departments, shifts, 8 employees, leave types/balances, overtime rates, a payroll policy, and logins (`admin@example.com` / `Admin@12345`). Refuses to run in production.
 
 ## Tests
 

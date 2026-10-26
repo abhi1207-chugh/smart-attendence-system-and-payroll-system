@@ -37,6 +37,14 @@ export function conflict(message: string): AppError {
   return new AppError(409, "CONFLICT", message);
 }
 
+export function unauthorized(message = "Authentication required"): AppError {
+  return new AppError(401, "UNAUTHORIZED", message);
+}
+
+export function forbidden(message = "You do not have permission to do this"): AppError {
+  return new AppError(403, "FORBIDDEN", message);
+}
+
 export function internalError(message = "An unexpected error occurred"): AppError {
   return new AppError(500, "INTERNAL_ERROR", message);
 }
