@@ -11,6 +11,8 @@ docker compose up -d                        # start PostgreSQL 16 (Docker Deskto
 cd backend && npm run dev                   # API on http://localhost:3001
 cd backend && npm test                      # Vitest, needs the DB running
 cd backend && npx tsc --noEmit              # type check
+cd frontend && npm run dev                  # Next.js on http://localhost:3000 (proxies /api/v1 to :3001)
+cd frontend && npm test && npm run typecheck
 cd backend && npm run seed                  # idempotent dev seed (admin@example.com / Admin@12345)
 ```
 Dev logins: `admin@example.com` / `Admin@12345` (ADMIN); `aarav.sharma@example.com` / `Employee@12345` (EMPLOYEE).

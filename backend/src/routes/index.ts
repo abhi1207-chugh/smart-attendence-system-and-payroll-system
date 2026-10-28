@@ -139,6 +139,7 @@ export function createReportsRouter(config: AuthConfig): Router {
   const router = Router();
   const authenticate = createAuthenticate(config.jwtSecret);
   const admin = [authenticate, requireRole("ADMIN")];
+  router.get("/reports/dashboard", ...admin, reports.dashboardHandler);
   router.get("/reports/attendance-summary", ...admin, reports.attendanceSummaryHandler);
   router.get("/reports/leave-balances", ...admin, reports.leaveBalancesReportHandler);
   router.get("/reports/payroll-register", ...admin, reports.payrollRegisterHandler);

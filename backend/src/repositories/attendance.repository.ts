@@ -253,7 +253,7 @@ export async function listSessions(f: {
     .add("a.work_date <= ?", f.to);
   const page = w.page(f.limit, f.offset);
   const r = await getDatabase().query(
-    `SELECT ${SESSION_COLUMNS}, e.employee_code
+    `SELECT ${SESSION_COLUMNS}, e.employee_code, e.first_name, e.last_name
      FROM attendance_session a JOIN employee e ON e.id = a.employee_id
      ${w.sql} ORDER BY a.check_in_at DESC, a.id ${page}`,
     w.params

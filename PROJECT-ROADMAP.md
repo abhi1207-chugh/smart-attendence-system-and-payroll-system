@@ -176,20 +176,19 @@ This roadmap reflects the **actual** project status. Items marked **COMPLETE** h
 
 ## PHASE 3 — Next.js Frontend
 
-**STATUS: PLANNED**
+**STATUS: COMPLETE** except the face registration UI, which belongs to Execution Plan Stage 5
 
 | Stage | Description |
 |-------|-------------|
-| Frontend foundation | Next.js app, API client, layout |
-| Authentication UI | Login, session handling |
-| Admin dashboard | Overview metrics |
-| Employee dashboard | Self-service home |
-| Employee management | Admin CRUD UI |
+| Frontend foundation — **COMPLETE** | `frontend/` Next.js 15 (App Router, TypeScript); `/api/v1/*` proxied to the backend via `rewrites` (no CORS); typed API client (`src/lib/api.ts`) that unwraps the response envelope; role-aware sidebar shell |
+| Admin + employee dashboards — **COMPLETE** | Admin: stat tiles from new `GET /reports/dashboard` (active/present/late/on-leave counts, pending leave and overtime, latest payroll run). Employee: today's status with check-in/out, month summary, leave balances, latest payslip. Tests: `backend/tests/dashboard.test.ts`, `frontend/tests/format.test.ts` |
+| Employee management — **COMPLETE** | ADMIN-only `/employees` (search + status filter), `/employees/new`, `/employees/[id]` (edit, deactivate with confirm). Client validation mirrors server rules; server field errors are shown inline. No reactivate (no API). Tests: `frontend/tests/employees.test.ts` |
+| Attendance UI — **COMPLETE** | `/attendance` for both roles: date-range history with Late / Early out / Corrected flags. ADMIN also gets employee + department filters, a manual punch (check-in/out for any active employee, the kiosk fallback until face recognition) and an inline correction form (reason required, only changed times sent). `GET /attendance` now includes employee names. Face-based kiosk arrives with Stage 5. Tests: `frontend/tests/attendance.test.ts` |
+| Leave / overtime UI — **COMPLETE** | `/leave`: employees request leave and see balances; ADMIN approves/rejects and can override a balance (reason required). `/overtime`: employees request (minutes derived from attendance); ADMIN adds records (optional minutes override) and approves/rejects. Lists now include employee names |
+| Payroll UI — **COMPLETE** | ADMIN `/payroll` (create run, list) and `/payroll/[id]` (compute preview, finalize with confirm, register with totals, bonuses/deductions for DRAFT runs, mark paid). EMPLOYEE `/payslips`; `/payslips/[id]` payslip with print |
+| Reports — **COMPLETE** | `/reports`: ADMIN tabs for attendance summary (range + department), leave balances, audit log (range + entity); EMPLOYEE personal summary for a date range |
+| Authentication UI — **COMPLETE** | `/login`, `AuthProvider` (token in localStorage, restored via `GET /auth/me`, auto sign-out on 401), guarded `(app)` layout, sign out. Tests: `frontend/tests/api.test.ts` |
 | Face registration UI | Camera capture for admin registration |
-| Attendance UI | Kiosk / employee check-in flow |
-| Leave / overtime UI | Request and approval screens |
-| Payroll UI | Run payroll, view register |
-| Reports | Admin and employee reports |
 
 ---
 

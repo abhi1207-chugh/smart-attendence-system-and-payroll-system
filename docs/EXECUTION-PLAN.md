@@ -19,7 +19,7 @@ Follow the existing layering. Each sub-step ends with tests green + roadmap upda
 ## Stage 3 — Close known SQL gaps — COMPLETE (migration `20241001000000_close_sql_gaps.sql`, `verify_stage3_gaps.sql`)
 Deduction cap so `net_pay >= 0`; lateness grace period; leave balance admin override; `CALENDAR_WORKING_DAYS` payroll divisor.
 
-## Stage 4 — Frontend (Next.js)
+## Stage 4 — Frontend (Next.js) — COMPLETE (face registration/kiosk UI deferred to Stage 5)
 App foundation + API client, login, admin dashboard, employee management, attendance/kiosk, leave/overtime, payroll, reports, employee self-service home.
 
 ## Stage 5 — Face recognition (stretch, last)

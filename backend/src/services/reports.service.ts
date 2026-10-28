@@ -25,3 +25,5 @@ export const auditLogs = (q: {
     from: q.from, to: q.to, entityType: q.entity_type, entityId: q.entity_id, actorId: q.actor_id,
     limit: q.limit, offset: q.offset,
   });
+
+export const dashboard = repo.dashboardSummary;

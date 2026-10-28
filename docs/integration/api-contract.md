@@ -499,6 +499,7 @@ MVP payroll frequency is **MONTHLY**. Payroll incorporates attendance classifica
 
 | Method | Path | Role | Description |
 |--------|------|------|-------------|
+| GET | `/reports/dashboard` | ADMIN | Today's headline counts + latest payroll run |
 | GET | `/reports/attendance-summary` | ADMIN | Period attendance summary |
 | GET | `/reports/leave-balances` | ADMIN | Leave balance report |
 | GET | `/reports/payroll-register` | ADMIN | Payroll register for period |

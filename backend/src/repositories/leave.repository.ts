@@ -3,7 +3,7 @@ import { Where, type Queryable } from "../database/queryable.js";
 
 const REQUEST_SELECT = `
   SELECT
-    lr.id, lr.employee_id, e.employee_code,
+    lr.id, lr.employee_id, e.employee_code, e.first_name, e.last_name,
     lr.leave_type_id, lt.code AS leave_type_code,
     to_char(lr.start_date, 'YYYY-MM-DD') AS start_date,
     to_char(lr.end_date, 'YYYY-MM-DD') AS end_date,

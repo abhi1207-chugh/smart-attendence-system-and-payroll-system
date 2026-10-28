@@ -160,3 +160,30 @@ export async function queryAuditLogs(f: {
   );
   return r.rows;
 }
+
+/** Headline counts for the admin dashboard ("today" = database CURRENT_DATE). */
+export async function dashboardSummary() {
+  const db = getDatabase();
+  const counts = await db.query(
+    `SELECT
+       to_char(CURRENT_DATE, 'YYYY-MM-DD') AS work_date,
+       (SELECT COUNT(*)::int FROM employee WHERE status = 'ACTIVE') AS active_employees,
+       (SELECT COUNT(DISTINCT employee_id)::int FROM attendance_session
+         WHERE work_date = CURRENT_DATE) AS present_today,
+       (SELECT COUNT(DISTINCT employee_id)::int FROM attendance_session
+         WHERE work_date = CURRENT_DATE AND status = 'OPEN') AS checked_in_now,
+       (SELECT COUNT(DISTINCT employee_id)::int FROM attendance_session
+         WHERE work_date = CURRENT_DATE AND is_late_arrival) AS late_today,
+       (SELECT COUNT(DISTINCT employee_id)::int FROM leave_request
+         WHERE status = 'APPROVED' AND CURRENT_DATE BETWEEN start_date AND end_date) AS on_leave_today,
+       (SELECT COUNT(*)::int FROM leave_request WHERE status = 'PENDING') AS pending_leave_requests,
+       (SELECT COUNT(*)::int FROM overtime_record WHERE status = 'PENDING') AS pending_overtime`
+  );
+  const run = await db.query(
+    `SELECT id, to_char(period_start, 'YYYY-MM-DD') AS period_start,
+            to_char(period_end, 'YYYY-MM-DD') AS period_end, status::text AS status
+     FROM payroll_run WHERE status <> 'FAILED'
+     ORDER BY period_start DESC, created_at DESC LIMIT 1`
+  );
+  return { ...counts.rows[0], latest_payroll_run: run.rows[0] ?? null };
+}

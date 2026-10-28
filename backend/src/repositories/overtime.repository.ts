@@ -3,7 +3,7 @@ import { Where, type Queryable } from "../database/queryable.js";
 
 const SELECT = `
   SELECT
-    ot.id, ot.employee_id, e.employee_code,
+    ot.id, ot.employee_id, e.employee_code, e.first_name, e.last_name,
     to_char(ot.work_date, 'YYYY-MM-DD') AS work_date,
     ot.overtime_minutes, ot.status::text AS status,
     ot.attendance_session_id, ot.approved_by_user_id, ot.approved_at, ot.notes,

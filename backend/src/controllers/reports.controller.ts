@@ -21,3 +21,6 @@ export const meSummaryHandler = asyncHandler(async (req, res) => {
 export const auditLogsHandler = asyncHandler(async (req, res) => {
   res.status(200).json(ok(await svc.auditLogs(v.parseAuditQuery(req.query))));
 });
+export const dashboardHandler = asyncHandler(async (_req, res) => {
+  res.status(200).json(ok(await svc.dashboard()));
+});
