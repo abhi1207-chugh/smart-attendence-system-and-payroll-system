@@ -28,8 +28,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.4.1",
     "@types/pg": "^8.23.1",
-    "@types/supertest": "^7.2.1",
-    "supertest": "^7.2.2",
+    "light-my-request": "6.3.0",
     "tsx": "^4.23.13",
     "typescript": "^7.0.2",
     "vitest": "^3.2.7"

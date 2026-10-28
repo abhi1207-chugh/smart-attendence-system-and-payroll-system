@@ -1,6 +1,21 @@
 import type { Request, Response, NextFunction } from "express";
-import { AppError, internalError } from "../errors/app-error.js";
+import { AppError, badRequest, conflict, internalError } from "../errors/app-error.js";
 import { DatabaseError } from "pg";
+
+function mapKnownDatabaseError(error: DatabaseError): AppError | null {
+  switch (error.code) {
+    case "P0001":
+      return conflict(error.message);
+    case "23505":
+      return conflict("A conflicting record already exists");
+    case "23503":
+      return badRequest("A referenced record does not exist or is still in use");
+    case "23514":
+      return badRequest("The data violates a database constraint");
+    default:
+      return null;
+  }
+}
 
 export function errorHandler(
   error: unknown,
@@ -21,6 +36,16 @@ export function errorHandler(
   }
 
   if (error instanceof DatabaseError) {
+    // Business rules raised by SQL functions/triggers (RAISE EXCEPTION) are
+    // meant for clients; other constraint failures get a generic message.
+    const mapped = mapKnownDatabaseError(error);
+    if (mapped) {
+      res.status(mapped.statusCode).json({
+        success: false,
+        error: { code: mapped.code, message: mapped.message, details: [] },
+      });
+      return;
+    }
     console.error("Database error:", {
       code: error.code,
       message: error.message,

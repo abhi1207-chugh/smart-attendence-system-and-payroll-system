@@ -68,12 +68,7 @@ This roadmap reflects the **actual** project status. Items marked **COMPLETE** h
 - `database/scripts/verify_step3_dbms.sql` — tests S3-01..S3-20
 - Documentation: `docs/database/functions.md`, `triggers.md`, `views.md`, `transactions.md`, `indexes.md`
 
-**Known DB-layer deferrals (documented, not implemented):**
-
-- `CALENDAR_WORKING_DAYS` payroll divisor calculation
-- Leave balance admin override
-- Deduction cap / `net_pay >= 0` enforcement
-- Attendance lateness grace period
+**DB-layer deferrals from this step were closed in Stage 3 (see below).**
 
 ---
 
@@ -102,12 +97,15 @@ This roadmap reflects the **actual** project status. Items marked **COMPLETE** h
 - Tests: `backend/tests/auth-utils.test.ts`, `auth-login.test.ts`, `auth-guard.test.ts`
 - Known limitation: stateless JWT — no logout/revocation until token expiry
 
-### Step 3 — Employee Management API
+### Step 3 — Employee Management API (Execution Plan Stage 2a)
 
-**STATUS: NEXT**
+**STATUS: COMPLETE**
 
-- Create, read, update, deactivate employees
-- Department and shift assignment
+- `POST /employees` (one transaction: employee + login user + leave balances for active leave types)
+- `GET /employees/{id}`, `PATCH /employees/{id}` (syncs login email), `POST /employees/{id}/deactivate` (also disables linked user)
+- `GET /departments`, `GET /shifts` (read-only lists, ADMIN)
+- Tests: `backend/tests/employees-crud.test.ts`
+- Department/shift create/update endpoints from api-contract §5–6 are not implemented (not in Stage 2a scope)
 
 ### Step 4 — Face Registration + Embedding Pipeline
 
@@ -125,34 +123,54 @@ This roadmap reflects the **actual** project status. Items marked **COMPLETE** h
 - `POST /face/recognize` — returns candidate `employee_id`
 - Similarity threshold validation
 
-### Step 6 — Attendance APIs + Business Rules
+### Step 6 — Attendance APIs + Business Rules (Execution Plan Stage 2b)
 
-**STATUS: PLANNED**
+**STATUS: COMPLETE** (manual `employee_id` input; face recognition arrives in Stage 5)
 
-- Check-in / check-out via backend (not face service)
-- Call PostgreSQL `complete_attendance_checkout()` and related functions
-- Duplicate session prevention, inactive employee rejection
+- `POST /attendance/check-in`, `POST /attendance/check-out` (calls `complete_attendance_checkout()`), `GET /attendance/today`
+- `PATCH /attendance/{id}` — ADMIN correction with required reason; recomputes duration, shift flags and the day row; audit entry written by the existing trigger
+- ADMIN may punch for any employee; EMPLOYEE only for themself. Server clock is authoritative; client timestamps and `FACE_RECOGNITION` source are rejected for now
+- Inactive employee and duplicate open session return 409
+- Tests: `backend/tests/attendance.test.ts`
+- `GET /attendance` list (ADMIN: employee/department/date filters; EMPLOYEE: own only)
 
-### Step 7 — Leave + Overtime APIs
+### Step 7 — Leave + Overtime APIs (Execution Plan Stage 2c)
 
-**STATUS: PLANNED**
+**STATUS: COMPLETE**
 
-- Leave request, approval (`approve_leave_request()`)
-- Overtime submission and approval
+- Leave: `GET /leave/types`, `POST|GET /leave/requests`, `GET /leave/requests/{id}`, `POST .../approve` (calls `approve_leave_request()` after a balance check), `POST .../reject`, `GET /leave/balances`. Submit is EMPLOYEE-only; overlapping pending/approved dates return 409; EMPLOYEE sees only own records
+- Overtime: `POST|GET /overtime`, `POST /overtime/{id}/approve|reject`. Minutes derive from attendance via `derive_overtime_minutes()`; only ADMIN may set them explicitly; one active record per employee/date
+- Tests: `backend/tests/leave-overtime.test.ts`
 
-### Step 8 — Payroll Engine + Payroll APIs
+### Step 8 — Payroll Engine + Payroll APIs (Execution Plan Stage 2d)
 
-**STATUS: PLANNED**
+**STATUS: COMPLETE**
 
-- Payroll run creation and finalization (`finalize_payroll_run()`)
-- Bonus, deduction, payment recording
+- `POST|GET /payroll/runs`, `GET /payroll/runs/{id}`, `POST .../compute` (preview, DRAFT only), `POST .../finalize` (`finalize_payroll_run()`)
+- `GET /payroll/records`, `GET /payroll/records/{id}`, `GET .../{id}/payslip` — EMPLOYEE sees only own FINALIZED/PAID records
+- `POST|GET /bonuses`, `POST|GET /deductions` (audited; rejected for periods already covered by a finalized run)
+- `POST|GET /payments` — requires a FINALIZED record, moves it to PAID, audited
+- Only `FIXED_DIVISOR` policies are accepted (`CALENDAR_WORKING_DAYS` is Stage 3); overlapping runs return 409
+- Tests: `backend/tests/payroll.test.ts` (verifies exact pay amounts)
 
-### Step 9 — Audit + Reporting APIs
+### Step 9 — Audit + Reporting APIs (Execution Plan Stage 2e)
 
-**STATUS: PLANNED**
+**STATUS: COMPLETE**
 
-- Audit log queries
-- Reporting views (`v_payroll_register`, `v_daily_attendance_report`, etc.)
+- `GET /audit-logs` (from, to, entity_type, entity_id, actor_id, paging)
+- `GET /reports/attendance-summary`, `/reports/leave-balances`, `/reports/payroll-register?period_id=<run id>`, `/reports/me/summary`
+- Tests: `backend/tests/reports-audit.test.ts`
+
+### Step 10 — Close known SQL gaps (Execution Plan Stage 3)
+
+**STATUS: COMPLETE**
+
+- Migration `20241001000000_close_sql_gaps.sql` (up/rollback/up verified)
+- Lateness grace: `shift.grace_period_minutes` (0–240, default 0); `derive_shift_timing_flags()` flags late only after `start_time + grace`; exposed on `GET /shifts`
+- Leave balance override: `adjust_leave_balance()` + `POST /leave/balances/adjust` (ADMIN, mandatory reason, audited)
+- Deduction cap: `compute_employee_payroll_record()` caps deductions at gross pay (excess is not carried over); `payroll_record_net_pay_non_negative` CHECK
+- `CALENDAR_WORKING_DAYS`: `resolve_payroll_divisor()` counts non-weekly-off days in the run period; payroll runs now accept these policies. No holiday calendar yet, intended for monthly runs; `working_days_in_policy` stores the effective divisor
+- Tests: `backend/tests/stage3-sql-gaps.test.ts`, `database/scripts/verify_stage3_gaps.sql` (S4-01..06)
 
 ---
 

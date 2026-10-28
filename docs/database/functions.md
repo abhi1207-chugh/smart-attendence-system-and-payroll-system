@@ -61,7 +61,7 @@ This document describes database functions implemented in migration `20240903110
 |---|---|
 | **What** | Returns `(is_late_arrival, is_early_checkout)`. |
 | **Why** | BR-ATT-26/27 — lateness vs shift times. |
-| **How** | Compares check-in/out `TIME` to shift `start_time`/`end_time`. **Grace period (BR-ATT-29) not applied** — TBD. |
+| **How** | Compares check-in/out `TIME` to shift `start_time`/`end_time`. Late only when check-in is after `start_time + shift.grace_period_minutes` (BR-ATT-29; Stage 3). |
 | **Where** | `complete_attendance_checkout`. |
 
 ### `derive_overtime_minutes(employee_id, work_date)`
@@ -105,8 +105,23 @@ This document describes database functions implemented in migration `20240903110
 |---|---|
 | **What** | One-day salary from monthly base and policy. |
 | **Why** | BR-PAY-05 — daily rate for attendance-adjusted pay. |
-| **How** | `FIXED_DIVISOR`: `ROUND(monthly / fixed_divisor, 2)`. `CALENDAR_WORKING_DAYS` **raises exception** (BR-PAY-06 TBD). |
+| **How** | `FIXED_DIVISOR`: `ROUND(monthly / fixed_divisor, 2)`. `CALENDAR_WORKING_DAYS` raises here; payroll now uses `resolve_payroll_divisor()` instead (Stage 3). |
 | **Where** | `compute_employee_payroll_record`. |
+
+### `resolve_payroll_divisor(payroll_policy_id, employee_id, period_start, period_end)` (Stage 3)
+
+| | |
+|---|---|
+| **What** | Working-day divisor for a policy. |
+| **How** | `FIXED_DIVISOR`: the fixed value. `CALENDAR_WORKING_DAYS`: days in the period that are not weekly-off for the employee's shift (no holiday calendar). Raises if zero. |
+| **Where** | `compute_employee_payroll_record` (stored in `working_days_in_policy`). Also: deductions are capped at gross pay so `net_pay >= 0`. |
+
+### `adjust_leave_balance(employee_id, leave_type_id, new_balance, admin_user_id, reason)` (Stage 3)
+
+| | |
+|---|---|
+| **What** | ADMIN override: sets a leave balance to an absolute value (upserts) and writes an `ADJUST` audit entry with old/new/reason. |
+| **Where** | `POST /leave/balances/adjust`. |
 
 ### `compute_attendance_adjusted_pay(employee_id, period_start, period_end, one_day_salary)`
 

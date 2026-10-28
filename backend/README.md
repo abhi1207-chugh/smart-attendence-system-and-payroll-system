@@ -23,14 +23,28 @@ npm run dev
 
 Server listens on `http://localhost:3001` by default (`BACKEND_PORT`).
 
-## API Endpoints (Phase 2.3 Steps 1–2)
+## API Endpoints
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/api/v1/health` | No | Backend and PostgreSQL health |
-| POST | `/api/v1/auth/login` | No | Email + password → `{ token, user }` |
-| GET | `/api/v1/auth/me` | Bearer | Current user from token |
-| GET | `/api/v1/employees` | Bearer, ADMIN | List employees from PostgreSQL |
+All paths are under `/api/v1`. Auth: `Bearer` JWT. "Scoped" means an EMPLOYEE only ever sees their own records.
+
+| Area | Endpoints | Access |
+|------|-----------|--------|
+| Health / auth | `GET /health`, `POST /auth/login`, `GET /auth/me` | public / public / any |
+| Employees | `GET,POST /employees`, `GET,PATCH /employees/{id}`, `POST /employees/{id}/deactivate` | ADMIN |
+| Reference | `GET /departments`, `GET /shifts` | ADMIN |
+| Attendance | `POST /attendance/check-in`, `POST /attendance/check-out`, `GET /attendance/today`, `GET /attendance` | ADMIN any employee; EMPLOYEE self |
+| | `PATCH /attendance/{id}` (correction, reason required) | ADMIN |
+| Leave | `GET /leave/types`, `GET,POST /leave/requests`, `GET /leave/requests/{id}`, `GET /leave/balances` | scoped; submit is EMPLOYEE |
+| | `POST /leave/requests/{id}/approve`, `.../reject` | ADMIN |
+| Overtime | `GET,POST /overtime` | scoped; ADMIN may set minutes |
+| | `POST /overtime/{id}/approve`, `.../reject` | ADMIN |
+| Payroll | `GET,POST /payroll/runs`, `GET /payroll/runs/{id}`, `POST .../compute`, `POST .../finalize` | ADMIN |
+| | `GET /payroll/records`, `GET /payroll/records/{id}`, `GET .../{id}/payslip` | scoped (EMPLOYEE: FINALIZED/PAID only) |
+| | `GET,POST /bonuses`, `GET,POST /deductions`, `GET,POST /payments` | ADMIN |
+| Reports | `GET /reports/attendance-summary`, `/reports/leave-balances`, `/reports/payroll-register`, `GET /audit-logs` | ADMIN |
+| | `GET /reports/me/summary` | EMPLOYEE |
+
+Deviations from `docs/integration/api-contract.md`: day classes are `FULL_DAY`/`HALF_DAY` (the DB enum values); attendance accepts only the `MANUAL` source until face recognition exists and ignores client timestamps; `POST /employees` takes an initial `password`; extra endpoints `/leave/types`, `/overtime/{id}/reject`, `/payroll/runs/{id}/compute`, `/payroll/records/{id}/payslip`.
 
 ## Seed data (development)
 
@@ -46,7 +60,7 @@ Idempotent. Creates departments, shifts, 8 employees, leave types/balances, over
 npm test
 ```
 
-Tests use the development PostgreSQL database configured in the root `.env` file. Test data is cleaned up after employee endpoint tests.
+Tests use the development PostgreSQL database configured in the root `.env` file and send requests in-process (`tests/helpers.ts`, via `light-my-request`) rather than over sockets. Files run serially because payroll finalization touches every active employee. Each test creates and removes its own rows; payroll tests use an isolated far-future/past year.
 
 ## Environment Variables
 

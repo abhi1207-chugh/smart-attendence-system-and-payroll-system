@@ -7,5 +7,7 @@ export default defineConfig({
     include: ["tests/**/*.test.ts"],
     setupFiles: ["tests/setup.ts"],
     testTimeout: 15000,
+    // Tests share one database, and payroll finalization touches every active employee.
+    fileParallelism: false,
   },
 });

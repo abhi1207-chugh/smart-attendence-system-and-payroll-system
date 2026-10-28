@@ -92,7 +92,7 @@ Classification is derived from **actual working duration** (check-out minus chec
 | BR-ATT-26 | **REQ** — **LATE_ARRIVAL** is a derived attendance state: actual check-in is later than the employee's assigned shift start time | MVP |
 | BR-ATT-27 | **REQ** — **EARLY_CHECKOUT** is a derived attendance state: actual check-out is earlier than the employee's assigned shift end time | MVP |
 | BR-ATT-28 | **REQ** — Late arrival and early checkout are informational/reporting states derived from shift comparison; they do not by themselves change HALF-DAY/FULL-DAY classification unless policy explicitly links them (no such linkage in MVP) | MVP |
-| BR-ATT-29 | **TBD** — Grace period for late check-in (e.g., 15 minutes) — value not finalized; lateness is computed against exact shift start until configured | MVP — value TBD |
+| BR-ATT-29 | **REQ** — Grace period for late check-in is configured per shift (`shift.grace_period_minutes`, default 0 = exact start) | MVP |
 | BR-ATT-30 | **TBD** — Whether early check-in is allowed or clamped to shift start | MVP — policy TBD |
 
 ### 3.7 Manual Correction and Leave Interaction

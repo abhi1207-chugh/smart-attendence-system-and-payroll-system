@@ -414,6 +414,7 @@ Creates audit log entry.
 | POST | `/leave/requests/{id}/approve` | ADMIN | Approve |
 | POST | `/leave/requests/{id}/reject` | ADMIN | Reject |
 | GET | `/leave/balances` | ADMIN, EMPLOYEE | Balances (scoped) |
+| POST | `/leave/balances/adjust` | ADMIN | Override a balance: `{employee_id, leave_type_id, balance_days, reason}`; audited |
 
 **Leave request statuses:** `PENDING` | `APPROVED` | `REJECTED`
 

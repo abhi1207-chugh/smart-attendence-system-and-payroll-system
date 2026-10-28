@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import request from "supertest";
+import { req } from "./helpers.js";
 import { createApp } from "../src/app.js";
 import { initDatabase, getDatabase } from "../src/database/client.js";
 import { signToken } from "../src/auth/token.js";
@@ -33,7 +33,7 @@ describe("Backend foundation", () => {
   });
 
   it("starts successfully and exposes the API", async () => {
-    const response = await request(app).get("/api/v1/health");
+    const response = await req(app).get("/api/v1/health");
     expect(response.status).toBe(200);
   });
 });
@@ -50,7 +50,7 @@ describe("GET /api/v1/health", () => {
   });
 
   it("returns backend healthy with postgres check", async () => {
-    const response = await request(app).get("/api/v1/health");
+    const response = await req(app).get("/api/v1/health");
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
@@ -122,7 +122,7 @@ describe("GET /api/v1/employees", () => {
   });
 
   it("queries PostgreSQL and returns structured employee JSON", async () => {
-    const response = await request(app).get("/api/v1/employees").set("Authorization", adminAuth);
+    const response = await req(app).get("/api/v1/employees").set("Authorization", adminAuth);
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
@@ -147,10 +147,10 @@ describe("GET /api/v1/employees", () => {
   });
 
   it("validates optional status query parameter", async () => {
-    const valid = await request(app).get("/api/v1/employees?status=ACTIVE").set("Authorization", adminAuth);
+    const valid = await req(app).get("/api/v1/employees?status=ACTIVE").set("Authorization", adminAuth);
     expect(valid.status).toBe(200);
 
-    const invalid = await request(app).get("/api/v1/employees?status=INVALID").set("Authorization", adminAuth);
+    const invalid = await req(app).get("/api/v1/employees?status=INVALID").set("Authorization", adminAuth);
     expect(invalid.status).toBe(400);
     expect(invalid.body.success).toBe(false);
     expect(invalid.body.error.code).toBe("VALIDATION_ERROR");
@@ -182,7 +182,7 @@ describe("Database configuration and error handling", () => {
       "postgres://invalid_user:invalid_pass@localhost:5432/nonexistent_db?sslmode=disable"
     );
 
-    const response = await request(app).get("/api/v1/employees").set("Authorization", adminAuth);
+    const response = await req(app).get("/api/v1/employees").set("Authorization", adminAuth);
 
     expect(response.status).toBe(500);
     expect(response.body.success).toBe(false);

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import request from "supertest";
+import { req } from "./helpers.js";
 import { createApp } from "../src/app.js";
 import { initDatabase, getDatabase } from "../src/database/client.js";
 import { hashPassword } from "../src/auth/password.js";
@@ -41,7 +41,7 @@ describe("POST /api/v1/auth/login", () => {
   });
 
   it("returns a verifiable token and user for valid credentials", async () => {
-    const res = await request(app)
+    const res = await req(app)
       .post("/api/v1/auth/login")
       .send({ email: ADMIN_EMAIL, password: PASSWORD });
 
@@ -57,14 +57,14 @@ describe("POST /api/v1/auth/login", () => {
   });
 
   it("matches email case-insensitively", async () => {
-    const res = await request(app)
+    const res = await req(app)
       .post("/api/v1/auth/login")
       .send({ email: ADMIN_EMAIL.toUpperCase(), password: PASSWORD });
     expect(res.status).toBe(200);
   });
 
   it("rejects a wrong password with 401", async () => {
-    const res = await request(app)
+    const res = await req(app)
       .post("/api/v1/auth/login")
       .send({ email: ADMIN_EMAIL, password: "wrong-password" });
     expect(res.status).toBe(401);
@@ -72,10 +72,10 @@ describe("POST /api/v1/auth/login", () => {
   });
 
   it("rejects an unknown email with the same 401 message", async () => {
-    const wrongPw = await request(app)
+    const wrongPw = await req(app)
       .post("/api/v1/auth/login")
       .send({ email: ADMIN_EMAIL, password: "wrong-password" });
-    const unknown = await request(app)
+    const unknown = await req(app)
       .post("/api/v1/auth/login")
       .send({ email: "nobody@example.com", password: PASSWORD });
     expect(unknown.status).toBe(401);
@@ -83,14 +83,14 @@ describe("POST /api/v1/auth/login", () => {
   });
 
   it("rejects an inactive user", async () => {
-    const res = await request(app)
+    const res = await req(app)
       .post("/api/v1/auth/login")
       .send({ email: DISABLED_EMAIL, password: PASSWORD });
     expect(res.status).toBe(401);
   });
 
   it("rejects malformed bodies with 400", async () => {
-    const res = await request(app).post("/api/v1/auth/login").send({ email: "" });
+    const res = await req(app).post("/api/v1/auth/login").send({ email: "" });
     expect(res.status).toBe(400);
     expect(res.body.error.code).toBe("VALIDATION_ERROR");
   });

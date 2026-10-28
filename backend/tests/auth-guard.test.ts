@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import request from "supertest";
 import jwt from "jsonwebtoken";
+import { req } from "./helpers.js";
 import { createApp } from "../src/app.js";
 import { initDatabase, getDatabase } from "../src/database/client.js";
 import { signToken } from "../src/auth/token.js";
@@ -38,13 +38,13 @@ describe("route protection", () => {
   });
 
   it("GET /employees without a token returns 401", async () => {
-    const res = await request(app).get("/api/v1/employees");
+    const res = await req(app).get("/api/v1/employees");
     expect(res.status).toBe(401);
     expect(res.body.error.code).toBe("UNAUTHORIZED");
   });
 
   it("rejects a malformed Authorization header", async () => {
-    const res = await request(app)
+    const res = await req(app)
       .get("/api/v1/employees")
       .set("Authorization", "Token abc");
     expect(res.status).toBe(401);
@@ -55,7 +55,7 @@ describe("route protection", () => {
       { sub: admin.id, email: admin.email, role: "ADMIN" },
       "x".repeat(40)
     );
-    const res = await request(app)
+    const res = await req(app)
       .get("/api/v1/employees")
       .set("Authorization", `Bearer ${forged}`);
     expect(res.status).toBe(401);
@@ -67,14 +67,14 @@ describe("route protection", () => {
       jwtSecret,
       { expiresIn: -10 }
     );
-    const res = await request(app)
+    const res = await req(app)
       .get("/api/v1/employees")
       .set("Authorization", `Bearer ${expired}`);
     expect(res.status).toBe(401);
   });
 
   it("GET /employees as EMPLOYEE returns 403", async () => {
-    const res = await request(app)
+    const res = await req(app)
       .get("/api/v1/employees")
       .set("Authorization", bearer(employee));
     expect(res.status).toBe(403);
@@ -82,7 +82,7 @@ describe("route protection", () => {
   });
 
   it("GET /employees as ADMIN returns 200", async () => {
-    const res = await request(app)
+    const res = await req(app)
       .get("/api/v1/employees")
       .set("Authorization", bearer(admin));
     expect(res.status).toBe(200);
@@ -90,18 +90,18 @@ describe("route protection", () => {
   });
 
   it("health stays public", async () => {
-    const res = await request(app).get("/api/v1/health");
+    const res = await req(app).get("/api/v1/health");
     expect(res.status).toBe(200);
   });
 
   it("GET /auth/me returns the token's user, and 401 without one", async () => {
-    const ok = await request(app)
+    const ok = await req(app)
       .get("/api/v1/auth/me")
       .set("Authorization", bearer(employee));
     expect(ok.status).toBe(200);
     expect(ok.body.data).toEqual(employee);
 
-    const no = await request(app).get("/api/v1/auth/me");
+    const no = await req(app).get("/api/v1/auth/me");
     expect(no.status).toBe(401);
   });
 });
