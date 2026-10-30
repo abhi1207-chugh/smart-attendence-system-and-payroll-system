@@ -254,9 +254,9 @@ Camera
 | Phase 2.2 Step 3 — Advanced DBMS | **COMPLETE** |
 | Phase 2.3 Step 1 — Backend Foundation | **COMPLETE** |
 | Phase 2.3 Step 2 — Auth | **COMPLETE** |
-| Phase 2.3 Step 3 — Employee API | **NEXT** |
-| Phase 2.3 Steps 4–9 | **PLANNED** |
-| Phase 3 — Frontend | **PLANNED** |
-| Phase 4 — Full Integration | **PLANNED** |
+| Phase 2.3 Steps 3–9 — Employee, attendance, leave/overtime, payroll, reports/audit APIs | **COMPLETE** |
+| Phase 2.3 Step 10 — Close SQL gaps (Execution Plan Stage 3) | **COMPLETE** |
+| Phase 3 — Frontend | **COMPLETE** (face registration UI deferred to Stage 5) |
+| Phase 4 — Full Integration (face recognition, Execution Plan Stage 5) | **NEXT** |
 | Phase 5 — Testing & Security | **PLANNED** |
 | Phase 6 — Deployment & Docs | **PLANNED** |
